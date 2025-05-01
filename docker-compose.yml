@@ -1,5 +1,33 @@
 ---
 services:
+################
+# GLUETUN
+################
+  gluetun:
+    image: qmcgaw/gluetun
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - 8085:8085   # qbittorrent
+      - 6881:6881   # Torrent Downloads
+      - 8989:8989   # Sonarr
+      - 7878:7878   # Radar
+      - 9696:9696   # Prowlarr
+      - 50000:50000
+    environment:
+      - VPN_SERVICE_PROVIDER=${VPN_PROVIDER}
+      - VPN_TYPE=${VPN_TYPE}
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      #- SERVER_COUNTRIES={SERVER_COUNTRIES}
+    healthcheck:
+      test: ping -c 1 www.google.com || exit 1
+      interval: 60s
+      timeout: 20s
+      retries: 5
+    restart: unless-stopped
 
 ################
 # RADARR
@@ -13,11 +41,10 @@ services:
       - PGID=1000
       - TZ=Etc/UTC
     volumes:
-      - ${MY_PATH}/radarr/config:/config
-      - ${MY_PATH}/content/movies:/movies #optional
-      - ${MY_PATH}/qbittorrent/downloads:/downloads #optional
-    ports:
-      - 7878:7878
+      - ${STACK_PATH}/config/radarr:/config
+      - ${STACK_PATH}/content/movies:/movies #optional
+      - ${STACK_PATH}/downloads:/downloads #optional
+    network_mode: "service:gluetun"
     restart: unless-stopped
 
 ################
@@ -32,11 +59,10 @@ services:
       - PGID=1000
       - TZ=Etc/UTC
     volumes:
-      - ${MY_PATH}/sonarr/config:/config
-      - ${MY_PATH}/content/tvseries:/tvseries #optional
-      - ${MY_PATH}/qbittorrent/downloads:/downloads #optional
-    ports:
-      - 8989:8989
+      - ${STACK_PATH}/config/sonarr:/config
+      - ${STACK_PATH}/content/tvseries:/tvseries #optional
+      - ${STACK_PATH}/downloads:/downloads #optional
+    network_mode: "service:gluetun"
     restart: unless-stopped
 
 ################
@@ -51,15 +77,16 @@ services:
       - PGID=1000
       - TZ=Etc/UTC
     volumes:
-      - ${MY_PATH}/prowlarr/config:/config
-    ports:
-      - 9696:9696
+      - ${STACK_PATH}/config/prowlarr:/config
+    network_mode: "service:gluetun"
     restart: unless-stopped
 
-#### QBITTORRENT ####
+################
+#QBITTORRENT
+################
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
-    container_name: qbittorrent
+    container_name: qbittorrentcd
     environment:
       - PUID=1000
       - PGID=1000
@@ -67,15 +94,14 @@ services:
       - WEBUI_PORT=8080
       - TORRENTING_PORT=6881
     volumes:
-      - ${MY_PATH}/qbittorrent/config:/config
-      - ${MY_PATH}/qbittorrent/downloads:/downloads #optional
-    ports:
-      - 8080:8080
-      - 6881:6881
-      - 6881:6881/udp
+      - ${STACK_PATH}/config/qbittorrent:/config
+      - ${STACK_PATH}/downloads:/downloads #optional
+    network_mode: "service:gluetun"
     restart: unless-stopped
 
-#### JELLYFIN ####
+################
+#JELLYFIN
+################
   jellyfin:
     image: lscr.io/linuxserver/jellyfin:latest
     container_name: jellyfin
@@ -84,12 +110,8 @@ services:
       - PGID=1000
       - TZ=Etc/UTC
     volumes:
-      - ${MY_PATH}/jellyfin/config:/config
-      - ${MY_PATH}/content/tvseries:/content/tvshows
-      - ${MY_PATH}/content/movies:/content/movies
-    ports:
-      - 8096:8096
-      - 8920:8920 #optional
-      - 7359:7359/udp #optional
-      - 1900:1900/udp #optional
+      - ${STACK_PATH}/config/jellyfin:/config
+      - ${STACK_PATH}/content/tvseries:/content/tvshows
+      - ${STACK_PATH}/content/movies:/content/movies
+    network_mode: host
     restart: unless-stopped
