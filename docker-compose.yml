@@ -13,9 +13,9 @@ services:
       - PGID=1000
       - TZ=Etc/UTC
     volumes:
-      - ${MY_PATH}/radarr/data:/config
-      - ${MY_PATH}/movies:/movies #optional
-      - ${MY_PATH}/download-client-downloads:/downloads #optional
+      - ${MY_PATH}/radarr/config:/config
+      - ${MY_PATH}/content/movies:/movies #optional
+      - ${MY_PATH}/qbittorrent/downloads:/downloads #optional
     ports:
       - 7878:7878
     restart: unless-stopped
@@ -32,9 +32,9 @@ services:
       - PGID=1000
       - TZ=Etc/UTC
     volumes:
-      - ${MY_PATH}/sonarr/data:/config
-      - ${MY_PATH}/tvseries:/tv #optional
-      - ${MY_PATH}/downloadclient-downloads:/downloads #optional
+      - ${MY_PATH}/sonarr/config:/config
+      - ${MY_PATH}/content/tvseries:/tvseries #optional
+      - ${MY_PATH}/qbittorrent/downloads:/downloads #optional
     ports:
       - 8989:8989
     restart: unless-stopped
@@ -51,7 +51,7 @@ services:
       - PGID=1000
       - TZ=Etc/UTC
     volumes:
-      - ${MY_PATH}/prowlarr/data:/config
+      - ${MY_PATH}/prowlarr/config:/config
     ports:
       - 9696:9696
     restart: unless-stopped
@@ -67,8 +67,8 @@ services:
       - WEBUI_PORT=8080
       - TORRENTING_PORT=6881
     volumes:
-      - ${MY_PATH}/qbittorrent/appdata:/config
-      - ${MY_PATH}/downloads:/downloads #optional
+      - ${MY_PATH}/qbittorrent/config:/config
+      - ${MY_PATH}/qbittorrent/downloads:/downloads #optional
     ports:
       - 8080:8080
       - 6881:6881
@@ -84,9 +84,9 @@ services:
       - PGID=1000
       - TZ=Etc/UTC
     volumes:
-      - ${MY_PATH}/jellyfin/library:/config
-      - ${MY_PATH}/tvseries:/data/tvshows
-      - ${MY_PATH}/movies:/data/movies
+      - ${MY_PATH}/jellyfin/config:/config
+      - ${MY_PATH}/content/tvseries:/content/tvshows
+      - ${MY_PATH}/content/movies:/content/movies
     ports:
       - 8096:8096
       - 8920:8920 #optional
