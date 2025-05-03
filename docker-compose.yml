@@ -1,4 +1,8 @@
----
+x-common-variables: &common-variables
+  TZ: ${TZ}
+  PUID: ${PUID}
+  PGID: ${PGID}
+
 services:
 ################
 # GLUETUN
@@ -12,21 +16,24 @@ services:
       - /dev/net/tun:/dev/net/tun
     ports:
       - 8085:8085   # qbittorrent
-      - 6881:6881   # Torrent Downloads
+      # - 6881:6881   # Torrent Downloads
       - 8989:8989   # Sonarr
       - 7878:7878   # Radar
       - 9696:9696   # Prowlarr
-      - 50000:50000
     environment:
-      - VPN_SERVICE_PROVIDER=${VPN_PROVIDER}
-      - VPN_TYPE=${VPN_TYPE}
-      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
-      #- SERVER_COUNTRIES={SERVER_COUNTRIES}
+      <<: *common-variables
+      VPN_SERVICE_PROVIDER: ${VPN_PROVIDER}
+      VPN_TYPE: ${VPN_TYPE}
+      WIREGUARD_PRIVATE_KEY: ${WIREGUARD_PRIVATE_KEY}
+      SERVER_COUNTRIES: ${SERVER_COUNTRIES}
+      VPN_PORT_FORWARDING: "on"
     healthcheck:
+      # disable: true
       test: ping -c 1 www.google.com || exit 1
-      interval: 60s
+      interval: 120s
       timeout: 20s
       retries: 5
+      start_period: 2m
     restart: unless-stopped
 
 ################
@@ -36,15 +43,13 @@ services:
   radarr:
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
+    network_mode: "service:gluetun"
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
+      <<: *common-variables
     volumes:
       - ${STACK_PATH}/config/radarr:/config
       - ${STACK_PATH}/content/movies:/movies #optional
       - ${STACK_PATH}/downloads:/downloads #optional
-    network_mode: "service:gluetun"
     restart: unless-stopped
 
 ################
@@ -54,15 +59,13 @@ services:
   sonarr:
     image: lscr.io/linuxserver/sonarr:latest
     container_name: sonarr
+    network_mode: "service:gluetun"
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
+      <<: *common-variables
     volumes:
       - ${STACK_PATH}/config/sonarr:/config
       - ${STACK_PATH}/content/tvseries:/tvseries #optional
       - ${STACK_PATH}/downloads:/downloads #optional
-    network_mode: "service:gluetun"
     restart: unless-stopped
 
 ################
@@ -72,13 +75,11 @@ services:
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
+    network_mode: "service:gluetun"
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
+      <<: *common-variables
     volumes:
       - ${STACK_PATH}/config/prowlarr:/config
-    network_mode: "service:gluetun"
     restart: unless-stopped
 
 ################
@@ -86,17 +87,15 @@ services:
 ################
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
-    container_name: qbittorrentcd
+    container_name: qbittorrent
+    network_mode: "service:gluetun"
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
-      - WEBUI_PORT=8080
-      - TORRENTING_PORT=6881
+      <<: *common-variables
+      WEBUI_PORT: 8085
+      TORRENTING_PORT: 6881
     volumes:
       - ${STACK_PATH}/config/qbittorrent:/config
       - ${STACK_PATH}/downloads:/downloads #optional
-    network_mode: "service:gluetun"
     restart: unless-stopped
 
 ################
@@ -105,13 +104,11 @@ services:
   jellyfin:
     image: lscr.io/linuxserver/jellyfin:latest
     container_name: jellyfin
+    network_mode: host
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
+      <<: *common-variables
     volumes:
       - ${STACK_PATH}/config/jellyfin:/config
       - ${STACK_PATH}/content/tvseries:/content/tvshows
       - ${STACK_PATH}/content/movies:/content/movies
-    network_mode: host
     restart: unless-stopped
