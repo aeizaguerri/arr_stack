@@ -24,8 +24,7 @@ This project implements the **ARR Stack** using Docker. The ARR Stack is a set o
   Media server that allows you to stream and consume the downloaded content from any device.
 
 ## 🖼️ Architecture Diagram
-
-> _Insert the architecture diagram here: `Arr Stack.svg`_
+![ARR Stack Diagram](assets/arr_stack_diagram.svg)
 
 ## 🚀 Implementation Details
 
